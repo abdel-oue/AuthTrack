@@ -1,14 +1,44 @@
 from datetime import datetime
 import requests
+import re
 
 
-filename = './Exos/small_auth.log'
+filename = './data/auth.log.1'
 
+"""
+The failed authentifications are represented in the log files by these keywords :
+ - Invalid user
+ - Failed password
+ - Connection closed
+The successful authentifications :
+ - Accepted password
+ - Accepted publickey
+"""
 # Opens file then puts lines into a List 
-def open_file(file:str)->list:
+def open_file(file:str) -> list:
     with open(file) as f:
         data = f.readlines()
     return data
+
+def ip_valid(line :str) -> str: 
+    # Returns an ip if there is an ip in the string given
+    ip = re.search(r"(\d){1,3}.(\d){1,3}.(\d){1,3}.(\d){1,3}",line)
+    if ip:
+        return ip.group(0)
+    return ""
+
+
+def failed_attempts(data: list) -> list[str]: 
+    # Returns a list of all the failed login attempts ips found in the auth.log
+    ips = []
+    for line in data:
+        if ("Invalid" or "Failed" or "Closed") in line:
+            ip = ip_valid(line)
+            if ip != "":
+                ips.append(ip)
+    return ips
+
+
 
 
 # Gets the ips
