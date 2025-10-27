@@ -3,7 +3,7 @@ import requests
 import re
 from mysql import connector
 
-filename = './data/small-auth.log'
+filename = './data/auth.log.1'
 
 """
 The failed authentifications are represented in the log files by these keywords :
@@ -48,16 +48,19 @@ def extract_data(data) -> list:
         ip = ip_valid(line)
 
         # USER Extraction
-        line_stripped = line.split(' ')
+        line_stripped = line.split()
         pos = 0
         if 'user' in line_stripped:
             pos = line_stripped.index('user')  # gives the position of 'user'
-        user = line_stripped[pos + 1]
-
+        if pos+1 > len(line_stripped): 
+            user = line_stripped[pos + 1]
+        else:
+            user = ""
         # DATE Extraction
+
         month = line_stripped[0]
-        day = line_stripped[2]
-        time = line_stripped[3]
+        day = line_stripped[1]
+        time = line_stripped[2]
         time_stripped = time.split(':')
         month_number = datetime.strptime(month, '%b').month
         date =  datetime(2025, month_number, int(day), int(time_stripped[0]),int(time_stripped[1]),int(time_stripped[2]))
@@ -77,7 +80,6 @@ def extract_data(data) -> list:
             attempt = "valid"
         datatuple = (date,attempt,pid,user,ip)
         datalist.append(datatuple)
-    print(datalist)
     return datalist
 
 def creating_table(con):
@@ -90,27 +92,25 @@ def creating_table(con):
         print("Error:", e)
         return False
     
+def data_is_clean(data):
+    # We don't want the lines where the the ip is null the username is null 
+    # (date, attempt, session, user, ip,)
+    if (data[1] == None and data[3] == "") or data[4] == "":
+        return False
+    return True
 
 def insert_to_table(con, datalist):
     query = "INSERT INTO ssh_logs (log_date, attempt, session_id, username, ip_address)VALUES (%s, %s, %s, %s, %s)"
     try:
         cursor = con.cursor()
         for data in datalist:
-            cursor.execute(query, data)
+            if data_is_clean(data):
+                cursor.execute(query, data)
         con.commit()
     except connector.Error as e:
         print("Error:", e)
         return False
 
-def failed_attempts(data: list) -> list[str]: 
-    # Returns a list of all the failed login attempts ips found in the auth.log
-    ips = []
-    for line in data:
-        if ("Invalid" or "Failed" or "Closed") in line:
-            ip = ip_valid(line)
-            if ip != "":
-                ips.append(ip)
-    return ips
 
 def get_country_city(ip: str)->list:
     try:
