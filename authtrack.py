@@ -1,9 +1,9 @@
 from datetime import datetime
 import requests
 import re
+from mysql import connector
 
-
-filename = './data/auth.log.1'
+filename = './data/small-auth.log'
 
 """
 The failed authentifications are represented in the log files by these keywords :
@@ -14,18 +14,80 @@ The successful authentifications :
  - Accepted password
  - Accepted publickey
 """
-# Opens file then puts lines into a List 
+
+def get_connection():
+    con = connector.connect(
+        user='root',
+        password='',
+        database='PythonLogs',
+        host='127.0.0.1',
+        port=3306
+    )
+    return con
+
 def open_file(file:str) -> list:
+    # Opens file then puts lines into a List 
     with open(file) as f:
         data = f.readlines()
     return data
 
 def ip_valid(line :str) -> str: 
     # Returns an ip if there is an ip in the string given
-    ip = re.search(r"(\d){1,3}.(\d){1,3}.(\d){1,3}.(\d){1,3}",line)
+    ip = re.search(r"(\d){1,3}\.(\d){1,3}\.(\d){1,3}\.(\d){1,3}",line)
     if ip:
         return ip.group(0)
     return ""
+
+def extract_data(data) -> list:
+    # Returns list of tuples (date, attempt, session, user, ip,)
+    datalist = []
+    
+    for line in data:
+        datatuple = ()
+        # IP Extraction
+        ip = ip_valid(line)
+
+        # USER Extraction
+        line_stripped = line.split(' ')
+        pos = 0
+        if 'user' in line_stripped:
+            pos = line_stripped.index('user')  # gives the position of 'user'
+        user = line_stripped[pos + 1]
+
+        # DATE Extraction
+        month = line_stripped[0]
+        day = line_stripped[2]
+        time = line_stripped[3]
+        time_stripped = time.split(':')
+        month_number = datetime.strptime(month, '%b').month
+        date =  datetime(2025, month_number, int(day), int(time_stripped[0]),int(time_stripped[1]),int(time_stripped[2]))
+
+        # SESSION Extraction
+        pid = None
+        for part in line_stripped:
+            if part.startswith('sshd['):
+                pid = part[5:-2]  # extract PID
+                break
+
+        # ATTEMPT Extraction
+        attempt = "None"
+        if ("Invalid" or "Failed" or "closed") in line:
+            attempt = "Invalid"
+        elif ("Accepted") in line:
+            attempt = "valid"
+        datatuple = (date,attempt,pid,user,ip)
+        datalist.append(datatuple)
+    print(datalist)
+    return datalist
+
+
+
+
+
+
+
+
+
 
 
 def failed_attempts(data: list) -> list[str]: 
@@ -38,6 +100,16 @@ def failed_attempts(data: list) -> list[str]:
                 ips.append(ip)
     return ips
 
+"""def get_ips_country(list : list[str]) -> tuple(list[str],list[str]):
+    # Returns a list of all the countries
+    countries = []
+    for ip in list:
+        url = f"https://ipinfo.io/{ip}/json"
+        response = requests.get(url, timeout=2)
+        if response.status_code == 200:
+            data = response.json()
+            countries.append(data.get("country"))
+    return countries"""
 
 
 
@@ -110,4 +182,4 @@ def get_country_city(ip: str)->list:
 
 if __name__ == "__main__":
     data = open_file(filename)
-    prints_attempts(data)
+    extract_data(data)
