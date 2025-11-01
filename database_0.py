@@ -1,4 +1,3 @@
-
 from mysql import connector
 
 def get_connection():
@@ -44,3 +43,45 @@ def insert_country_to_line(con, country: str, ip: str):
     except connector.Error as e:
         print("Error:", e)
         return False
+
+def get_country_failed_attempts(con):
+    """
+    Returns list of tuples: [(country, attempts), ...]
+    attempts = count of rows where status is Invalid or Failed
+    """
+    query = """
+    SELECT country, COUNT(*) AS attempts
+    FROM ssh_logs
+    WHERE status IN ('Invalid', 'Failed')
+    GROUP BY country
+    """
+    try:
+        cursor = con.cursor()
+        cursor.execute(query)
+        results = cursor.fetchall()  # [(country1, attempts1), (country2, attempts2), ...]
+        cursor.close()
+        return results
+    except connector.Error as e:
+        print("Error:", e)
+        return []
+    
+def get_accepted_user_data(con):
+    """
+    Returns list of tuples: [(country, attempts), ...]
+    attempts = count of rows where status is Invalid or Failed
+    """
+    query = """
+    SELECT country, COUNT(*) AS attempts
+    FROM ssh_logs
+    WHERE status IN ('Invalid', 'Failed')
+    GROUP BY country
+    """
+    try:
+        cursor = con.cursor()
+        cursor.execute(query)
+        results = cursor.fetchall()  # [(country1, attempts1), (country2, attempts2), ...]
+        cursor.close()
+        return results
+    except connector.Error as e:
+        print("Error:", e)
+        return []
