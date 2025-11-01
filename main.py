@@ -2,6 +2,7 @@ from extraction import extract_data
 from api_service import get_country
 import database_0 as db
 import dashboards as plot
+from file_logs import write_log_file
 
 def insert_country_to_data(con, data : list):
     for i,line in enumerate(data):
@@ -25,6 +26,9 @@ if __name__ == '__main__':
     countrylist = db.get_country_failed_attempts(con)
     userlist = db.get_accepted_user_data(con)
     logsdata = db.get_logging_data(con)
+
     # ----- Drawing plots and writing logs from data achieved from database -----
+
     plot.draw_countries(countrylist)
     plot.draw_users(userlist)
+    write_log_file(logsdata)

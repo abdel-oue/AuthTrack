@@ -87,3 +87,29 @@ def get_accepted_user_data(con):
     except connector.Error as e:
         print("Error:", e)
         return []
+
+def get_logging_data(con):
+    """
+    Returns [(log_date, service, user, ip, status), ...]
+    for rows where country IS NULL and status is Failed or Accepted.
+    """
+    query = """
+    SELECT log_date,
+           service,
+           user,
+           ip,
+           status
+    FROM ssh_logs
+    WHERE country IS NULL
+      AND status IN ('Failed', 'Accepted', 'Invalid')
+    ORDER BY log_date;
+    """
+    try:
+        cursor = con.cursor()
+        cursor.execute(query)
+        results = cursor.fetchall()
+        cursor.close()
+        return results
+    except connector.Error as e:
+        print("Error:", e)
+        return []
