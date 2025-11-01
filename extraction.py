@@ -13,22 +13,23 @@ def convert_log_date(date : str) -> datetime:
     return datetime(2025, month_number, int(day), int(time_stripped[0]),int(time_stripped[1]),int(time_stripped[2]))
 
 def extract_line(line : str)-> tuple: 
-    invalid_pattern = r'^(\w{3}\s+\d{1,2}\s+\d{2}:\d{2}:\d{2})\s+.+Invalid user\s+(\w+)+\s+from\s+(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}) port (\d{1,5}) ((\w|\d)+)'
-    failed_pattern = r'^(\w{3}\s+\d{1,2}\s+\d{2}:\d{2}:\d{2})\s+.+Failed password for invalid user\s+(\w+)+\s+from\s+(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}) port (\d{1,5}) ((\w|\d)+)'
-    accepted_pattern = r'^(\w{3}\s+\d{1,2}\s+\d{2}:\d{2}:\d{2})\s+.+Accepted password for invalid user\s+(\w+)+\s+from\s+(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}) port (\d{1,5}) ((\w|\d)+)'
+    invalid_pattern = r'^(\w{3}\s+\d{1,2}\s+\d{2}:\d{2}:\d{2})\s+.+Invalid user\s+(\w+)\s+from\s+(\d{1,3}(?:\.\d{1,3}){3}) port (\d{1,5})(?:\s+(\w+))?'
+    failed_pattern = r'^(\w{3}\s+\d{1,2}\s+\d{2}:\d{2}:\d{2})\s+.+Failed password for (?:invalid user )?(\w+)\s+from\s+(\d{1,3}(?:\.\d{1,3}){3}) port (\d{1,5}) (\w+)'
+    accepted_pattern = r'^(\w{3}\s+\d{1,2}\s+\d{2}:\d{2}:\d{2})\s+.+Accepted password for (\w+)\s+from\s+(\d{1,3}(?:\.\d{1,3}){3}) port (\d{1,5}) (\w+)'
     status = "Failed"
     match = re.search(failed_pattern, line)
     if not match:
-        match = re.search(invalid_pattern, line)
-    if not match:
         match = re.search(accepted_pattern, line)
         status = "Accepted"
+    if not match:
+        match = re.search(invalid_pattern, line)
+        status = "Invalid"
     if match : 
         date = match.group(1)
         clean_date = convert_log_date(date)
         user = match.group(2)
         ip = match.group(3)
-        service = match.group(5)
+        service = match.group(5) or "Unknown"
         return (clean_date,user,ip,status,service)
     return ()
 

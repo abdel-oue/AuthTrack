@@ -22,7 +22,7 @@ def creating_table(con):
         return False   
     
 def insert_to_table(con, datalist):
-    query = "INSERT INTO ssh_logs (log_date, attempt, session_id, username, ip_address)VALUES (%s, %s, %s, %s, %s)"
+    query = "INSERT INTO ssh_logs (log_date, user, ip, status, service)VALUES (%s, %s, %s, %s, %s)"
     try:
         cursor = con.cursor()
         cursor.executemany(query, datalist)  # <--- this one
@@ -34,7 +34,7 @@ def insert_to_table(con, datalist):
         return False
 
 def insert_country_to_line(con, country: str, ip: str):
-    query = "UPDATE ssh_logs SET country = %s WHERE ip_address = %s"
+    query = "UPDATE ssh_logs SET country = %s WHERE ip = %s"
     try:
         cursor = con.cursor()
         cursor.execute(query, (country, ip))
