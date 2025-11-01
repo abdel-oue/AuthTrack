@@ -23,7 +23,8 @@ if __name__ == '__main__':
 
     #insert_country_to_data(con,data)
     countrylist = db.get_country_failed_attempts(con)
-
+    userlist = db.get_accepted_user_data(con)
+    logsdata = db.get_logging_data(con)
     # ----- Drawing plots and writing logs from data achieved from database -----
     plot.draw_countries(countrylist)
-
+    plot.draw_users(userlist)

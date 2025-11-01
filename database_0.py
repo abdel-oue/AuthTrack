@@ -67,19 +67,21 @@ def get_country_failed_attempts(con):
     
 def get_accepted_user_data(con):
     """
-    Returns list of tuples: [(country, attempts), ...]
+    Returns list of tuples: [(date, user, attempts), ...]
     attempts = count of rows where status is Invalid or Failed
     """
     query = """
-    SELECT country, COUNT(*) AS attempts
+    SELECT DATE(log_date) as day, user, COUNT(*) as attempts
     FROM ssh_logs
-    WHERE status IN ('Invalid', 'Failed')
-    GROUP BY country
+    WHERE status = 'Accepted'
+    GROUP BY day, user
+    HAVING COUNT(*) > 0
+    ORDER BY day, user
     """
     try:
         cursor = con.cursor()
         cursor.execute(query)
-        results = cursor.fetchall()  # [(country1, attempts1), (country2, attempts2), ...]
+        results = cursor.fetchall()  # [(2025-10-04, 'user1', 3), ...]
         cursor.close()
         return results
     except connector.Error as e:
