@@ -66,11 +66,12 @@ def ip_valid(line :str) -> str:
 def extract_data(data) -> list:
     # Returns list of tuples (date, attempt, session, user, ip,)
     datalist = []
-    
     for line in data:
         datatuple = ()
-        # IP Extraction
-        ip = ip_valid(line)
+
+        failed_pattern = r''
+        accepted_pattern = r''
+        
 
         # USER Extraction
         line_stripped = line.split()
