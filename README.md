@@ -105,5 +105,5 @@ This project is licensed under the MIT License.
 ## Author
 
 **Abdelaziz Ouedghiri**  
-- Founder of [Dynaut](https://www.dynaut.com/) — Automation services & business tools  
+- Founder of [Dynaut](https://www.dynaut.com/)
 - Contact: abdelazizouedghiri10@gmail.com
